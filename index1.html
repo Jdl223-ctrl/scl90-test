@@ -183,30 +183,72 @@ const questions = [
 ];
 </script>
 
-/* ========= 开始测试 ========= */
-function startTest(){
-  document.getElementById("intro").style.display="none";
-  const form = document.getElementById("testForm");
-  form.style.display="block";
+<script>
+function renderQuestions() {
+  const container = document.getElementById('questions')
+  container.innerHTML = ''
 
-  questions.forEach((q,i)=>{
-    const div = document.createElement("div");
-    div.className="question";
-    div.innerHTML =
-      `<p>${i+1}. ${q.text}</p>` +
-      scale.map((s,v)=>
-        `<label><input type="radio" name="q${i}" value="${v}" required> ${v} ${s}</label>`
-      ).join("");
-    form.appendChild(div);
-  });
+  const start = currentPage * pageSize
+  const end = Math.min(start + pageSize, questions.length)
+  const totalPages = Math.ceil(questions.length / pageSize)
 
-  const btn = document.createElement("button");
-  btn.type="submit";
-  btn.textContent="提交并查看结果";
-  form.appendChild(btn);
+  // 进度提示
+  const progress = document.createElement('div')
+  progress.className = 'progress'
+  progress.innerText = `第 ${currentPage + 1} / ${totalPages} 页`
+  container.appendChild(progress)
 
-  form.onsubmit = submitTest;
+  for (let i = start; i < end; i++) {
+    const q = questions[i]
+    const div = document.createElement('div')
+    div.className = 'question'
+    div.innerHTML = `
+      <p>${q.id}. ${q.text}</p>
+      ${[0,1,2,3,4].map(v => `
+        <label>
+          <input type="radio" name="q${q.id}" value="${v}"
+            ${answers[q.id] == v ? 'checked' : ''}>
+          ${v}
+        </label>
+      `).join('')}
+    `
+    container.appendChild(div)
+  }
+
+  // 按钮区
+  const nav = document.createElement('div')
+  nav.className = 'nav-buttons'
+
+  if (currentPage > 0) {
+    const prev = document.createElement('button')
+    prev.innerText = '上一页'
+    prev.onclick = () => {
+      saveAnswers()
+      currentPage--
+      renderQuestions()
+    }
+    nav.appendChild(prev)
+  }
+
+  if (end < questions.length) {
+    const next = document.createElement('button')
+    next.innerText = '下一页'
+    next.onclick = () => {
+      saveAnswers()
+      currentPage++
+      renderQuestions()
+    }
+    nav.appendChild(next)
+  } else {
+    const submit = document.createElement('button')
+    submit.innerText = '提交并查看结果'
+    submit.onclick = submitTest
+    nav.appendChild(submit)
+  }
+
+  container.appendChild(nav)
 }
+</script>
 
 /* ========= 计算结果 ========= */
 function submitTest(e){
@@ -252,5 +294,6 @@ function submitTest(e){
 
 </body>
 </html>
+
 
 
