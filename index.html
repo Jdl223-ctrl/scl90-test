@@ -95,13 +95,31 @@ function renderQuestions(){
   container.appendChild(nav);
 }
 function submitTest(){
-  saveAnswers();document.getElementById('questions').style.display='none';const resultDiv=document.getElementById('result');resultDiv.style.display='block';
-  const factors={};labelsList.forEach(l=>factors[l]=0);const count={};labelsList.forEach(l=>count[l]=0);
-  questions.forEach(q=>{if(answers[q.id]!=undefined){factors[q.factor]+=answers[q.id];count[q.factor]++;}});
-  const data=labelsList.map(l=>(count[l]>0?(factors[l]/count[l]).toFixed(2):0));factorData={labels:labelsList,data};
-  const ctx=document.getElementById('radarChart').getContext('2d');new Chart(ctx,{type:'radar',data:{labels:labelsList,datasets:[{label:'心理因子均分',data:data,backgroundColor:'rgba(76,175,80,0.2)',borderColor:'rgba(76,175,80,1)',borderWidth:2}]},options:{scales:{r:{beginAtZero:true,max:4}},responsive:true}});
-  const depressAvg=data[labelsList.indexOf("抑郁")];let text='';if(depressAvg<1)text="你最近情绪稳定，继续保持。";else if(depressAvg<2)text="你可能有轻度情绪波动，建议放松自己。";else if(depressAvg<3)text="情绪偏低，请多关注自己，适当倾诉。";else text="情绪较严重，建议寻求专业心理咨询。";document.getElementById('reportText').innerHTML=`<p>${text}</p>`;
+  saveAnswers();
+  fetch('/api/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({token,answers})
+  }).then(res=>res.json())
+    .then(data=>{if(data.success) showResult(); else alert(data.msg || '提交失败');})
+    .catch(()=>alert('网络错误，请稍后重试'));
 }
+
+// ================= 结果展示 =================
+function showResult(){
+  document.getElementById('questions').style.display='none';
+  const resultDiv=document.getElementById('result');resultDiv.style.display='block';
+  const factors={}, count={};labelsList.forEach(l=>{factors[l]=0; count[l]=0;});
+  questions.forEach(q=>{if(answers[q.id]!=undefined){factors[q.factor]+=answers[q.id];count[q.factor]++;}});
+  const data=labelsList.map(l=>(count[l]>0?(factors[l]/count[l]).toFixed(2):0));
+  factorData={labels:labelsList,data};
+  const ctx=document.getElementById('radarChart').getContext('2d');
+  new Chart(ctx,{type:'radar',data:{labels:labelsList,datasets:[{label:'心理因子均分',data,backgroundColor:'rgba(76,175,80,0.2)',borderColor:'rgba(76,175,80,1)',borderWidth:2}]},options:{scales:{r:{beginAtZero:true,max:4}},responsive:true}});
+  const depressAvg=data[labelsList.indexOf("抑郁")];let text='';if(depressAvg<1)text="你最近情绪稳定，继续保持。";else if(depressAvg<2)text="你可能有轻度情绪波动，建议放松自己。";else if(depressAvg<3)text="情绪偏低，请多关注自己，适当倾诉。";else text="情绪较严重，建议寻求专业心理咨询。";
+  document.getElementById('reportText').innerHTML=`<p>${text}</p>`;
+}
+
+// ================= Canvas 海报 =================
 function generatePoster(){
   const canvas=document.getElementById('posterCanvas');canvas.style.display='block';const ctx=canvas.getContext('2d');
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -117,3 +135,6 @@ function generatePoster(){
 
 </body>
 </html>
+
+
+
