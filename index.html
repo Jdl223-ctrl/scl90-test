@@ -26,13 +26,15 @@ body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
   <button onclick="startTest()">开始测试</button>
 </div>
 
-<div class="card" id="questions" style="display:none;"></div>
+<div class="card" id="questions" style="display:none"></div>
 
-<div class="card" id="result" style="display:none;">
-  <canvas id="radarChart" width="400" height="400"></canvas>
-  <div id="reportText" style="margin-top:15px;"></div>
-  <button onclick="generatePoster()">生成心理状态海报</button>
-  <canvas id="posterCanvas" width="600" height="800"></canvas>
+
+<div class="card" id="result" style="display:none">
+<h3>你的心理评估结果</h3>
+<canvas id="radarChart" width="400" height="400"></canvas>
+<div id="reportText" style="margin-top:15px"></div>
+<button onclick="generatePoster()">生成心理状态海报</button>
+<canvas id="posterCanvas" width="600" height="800"></canvas>
 </div>
 
 <script>
@@ -92,7 +94,7 @@ function renderQuestions(){
   if(currentPage>0){const prev=document.createElement('button');prev.innerText='上一页';prev.onclick=()=>{saveAnswers();currentPage--;renderQuestions()};nav.appendChild(prev);}
   if(end<questions.length){const next=document.createElement('button');next.innerText='下一页';next.onclick=()=>{saveAnswers();currentPage++;renderQuestions()};nav.appendChild(next);}
   else{const submit=document.createElement('button');submit.innerText='提交并查看结果';submit.onclick=submitTest;nav.appendChild(submit);}
-  container.appendChild(nav);
+  box.appendChild(nav);
 }
 function submitTest(){
   saveAnswers();
@@ -107,18 +109,21 @@ function submitTest(){
 
 // ================= 结果展示 =================
 function showResult(){
-  document.getElementById('questions').style.display='none';
-  const resultDiv=document.getElementById('result');resultDiv.style.display='block';
-  const factors={}, count={};labelsList.forEach(l=>{factors[l]=0; count[l]=0;});
-  questions.forEach(q=>{if(answers[q.id]!=undefined){factors[q.factor]+=answers[q.id];count[q.factor]++;}});
-  const data=labelsList.map(l=>(count[l]>0?(factors[l]/count[l]).toFixed(2):0));
-  factorData={labels:labelsList,data};
-  const ctx=document.getElementById('radarChart').getContext('2d');
-  new Chart(ctx,{type:'radar',data:{labels:labelsList,datasets:[{label:'心理因子均分',data,backgroundColor:'rgba(76,175,80,0.2)',borderColor:'rgba(76,175,80,1)',borderWidth:2}]},options:{scales:{r:{beginAtZero:true,max:4}},responsive:true}});
-  const depressAvg=data[labelsList.indexOf("抑郁")];let text='';if(depressAvg<1)text="你最近情绪稳定，继续保持。";else if(depressAvg<2)text="你可能有轻度情绪波动，建议放松自己。";else if(depressAvg<3)text="情绪偏低，请多关注自己，适当倾诉。";else text="情绪较严重，建议寻求专业心理咨询。";
-  document.getElementById('reportText').innerHTML=`<p>${text}</p>`;
+document.getElementById('questions').style.display='none';
+const r=document.getElementById('result');r.style.display='block';
+const sum={},cnt={};labelsList.forEach(l=>{sum[l]=0;cnt[l]=0});
+questions.forEach(q=>{if(answers[q.id]!=null){sum[q.factor]+=answers[q.id];cnt[q.factor]++}});
+const data=labelsList.map(l=>(cnt[l]? (sum[l]/cnt[l]).toFixed(2):0));
+factorData={labels:labelsList,data};
+new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:labelsList,datasets:[{data,backgroundColor:'rgba(76,175,80,.2)',borderColor:'#4caf50'}]},options:{scales:{r:{beginAtZero:true,max:4}}}});
+const dep=data[labelsList.indexOf('抑郁')];
+let t='';
+if(dep<1)t='情绪状态良好，请继续保持';
+else if(dep<2)t='有轻度情绪波动，请注意休息';
+else if(dep<3)t='情绪压力偏大，建议寻求支持';
+else t='情绪较重，建议咨询专业人士';
+document.getElementById('reportText').innerText=t;
 }
-
 // ================= Canvas 海报 =================
 function generatePoster(){
   const canvas=document.getElementById('posterCanvas');canvas.style.display='block';const ctx=canvas.getContext('2d');
@@ -135,6 +140,3 @@ function generatePoster(){
 
 </body>
 </html>
-
-
-
