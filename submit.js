@@ -1,14 +1,32 @@
-﻿export default function handler(req, res) {
-  const { token } = req.body;          // 获取前端提交的 token
-  const today = new Date().toISOString().slice(0, 10); // 获取今天日期
+import { MongoClient } from 'mongodb';
 
-  // 校验 token 是否为今天
-  if (token !== today) {
-    return res.status(403).json({ msg: '链接已失效' });
+const uri = process.env.MONGODB_URI; // Vercel 环境变量
+let client;
+
+async function getClient() {
+  if (!client) client = new MongoClient(uri);
+  if (!client.isConnected?.()) await client.connect();
+  return client;
+}
+
+export default async function handler(req,res){
+  const { token, answers } = req.body;
+  const today = new Date().toISOString().slice(0,10);
+
+  // 校验每日 token
+  if(token!==today) return res.status(403).json({msg:'链接已失效'});
+
+  try{
+    const client = await getClient();
+    const db = client.db('scl90test');
+    await db.collection('results').insertOne({
+      date: today,
+      answers,
+      createdAt: new Date()
+    });
+    res.status(200).json({success:true});
+  } catch(err){
+    console.error(err);
+    res.status(500).json({msg:'服务器错误'});
   }
-
-  // 这里可以保存结果到数据库（可选）
-  // 例如：MongoDB / MySQL / Google Sheets
-
-  res.status(200).json({ success: true }); // 返回成功
 }
