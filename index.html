@@ -88,44 +88,184 @@ if(!url.searchParams.get('token')){
     '<div class="container"><div class="card"><h2>链接已失效</h2><p>请获取今日有效测试链接。</p></div></div>';
 }
 
-/* ========= SCL-90 题目（示例结构，可补满 90 题）========= */
+<script>
 const questions = [
-  {id:1,text:"头痛",factor:"躯体化"},
-  {id:2,text:"神经过敏，心中不踏实",factor:"焦虑"},
-  {id:3,text:"头脑中有不必要的想法或字句盘旋",factor:"强迫"},
-  {id:4,text:"头昏或昏倒",factor:"躯体化"},
-  {id:5,text:"对生活中的事情提不起兴趣",factor:"抑郁"},
-  // 👉 实际使用时按官方题库补齐到 90 题
+ {id:1, text:"头痛"},
+ {id:2, text:"神经过敏，心中不踏实"},
+ {id:3, text:"头脑中有不必要的想法或字句盘旋"},
+ {id:4, text:"头昏或昏倒"},
+ {id:5, text:"对异性的兴趣减退"},
+ {id:6, text:"对旁人责备你或议论你感到不安"},
+ {id:7, text:"感到别人能控制你的思想"},
+ {id:8, text:"责怪别人制造麻烦"},
+ {id:9, text:"忘性大"},
+ {id:10, text:"担心衣服不整齐、仪态不好"},
+ {id:11, text:"容易烦恼和激动"},
+ {id:12, text:"胸口或心口疼痛"},
+ {id:13, text:"害怕空旷的场所或街道"},
+ {id:14, text:"感到自己的精力下降，活动减慢"},
+ {id:15, text:"想结束自己的生命"},
+ {id:16, text:"听到旁人听不到的声音"},
+ {id:17, text:"发抖"},
+ {id:18, text:"感到大多数人都不可信任"},
+ {id:19, text:"胃口不好"},
+ {id:20, text:"容易哭泣"},
+ {id:21, text:"同异性相处时感到害羞不自在"},
+ {id:22, text:"感到受骗、被利用或被欺负"},
+ {id:23, text:"无缘无故地突然感到害怕"},
+ {id:24, text:"自己不能控制地大发脾气"},
+ {id:25, text:"怕单独出门"},
+ {id:26, text:"经常责怪自己"},
+ {id:27, text:"腰痛"},
+ {id:28, text:"感到难以完成事情"},
+ {id:29, text:"感到孤独"},
+ {id:30, text:"感到苦闷"},
+ {id:31, text:"过分担忧"},
+ {id:32, text:"对事物不感兴趣"},
+ {id:33, text:"感到害怕"},
+ {id:34, text:"你的感情容易受到伤害"},
+ {id:35, text:"旁人能知道你的私下想法"},
+ {id:36, text:"感到别人不理解你、不同情你"},
+ {id:37, text:"感到人们对你不友好、不喜欢你"},
+ {id:38, text:"做事必须做得很慢以保证做得正确"},
+ {id:39, text:"心跳得很厉害"},
+ {id:40, text:"恶心或胃部不舒服"},
+ {id:41, text:"感到比不上别人"},
+ {id:42, text:"肌肉酸痛"},
+ {id:43, text:"感到有人在监视你、谈论你"},
+ {id:44, text:"难以入睡"},
+ {id:45, text:"做事必须反复检查"},
+ {id:46, text:"难以做出决定"},
+ {id:47, text:"怕乘坐公共汽车、地铁或火车"},
+ {id:48, text:"呼吸有困难"},
+ {id:49, text:"一阵阵发冷或发热"},
+ {id:50, text:"因为害怕而回避某些东西、场合或活动"},
+ {id:51, text:"脑子变空了"},
+ {id:52, text:"身体发麻或刺痛"},
+ {id:53, text:"喉咙有梗塞感"},
+ {id:54, text:"对未来感到没有希望"},
+ {id:55, text:"难以集中注意力"},
+ {id:56, text:"感到身体的某一部分软弱无力"},
+ {id:57, text:"感到紧张或容易紧张"},
+ {id:58, text:"感到手或脚沉重"},
+ {id:59, text:"想到死亡的事情"},
+ {id:60, text:"吃得太多"},
+ {id:61, text:"当别人看着你或谈论你时感到不自在"},
+ {id:62, text:"有一些不属于你自己的想法"},
+ {id:63, text:"有想打人或伤害他人的冲动"},
+ {id:64, text:"醒得太早"},
+ {id:65, text:"必须反复洗手或反复清洁"},
+ {id:66, text:"睡得不稳不深"},
+ {id:67, text:"有想摔坏或破坏东西的冲动"},
+ {id:68, text:"有一些别人没有的想法或念头"},
+ {id:69, text:"感到对别人神经过敏"},
+ {id:70, text:"在商店或电影院等人多的地方感到不自在"},
+ {id:71, text:"感到做任何事情都很困难"},
+ {id:72, text:"一阵阵恐惧或惊恐"},
+ {id:73, text:"感到在公共场合吃东西很不舒服"},
+ {id:74, text:"经常与人争论"},
+ {id:75, text:"单独一人时感到害怕"},
+ {id:76, text:"感到别人不重视你的成就"},
+ {id:77, text:"感到孤单，即使和别人在一起"},
+ {id:78, text:"感到坐立不安、心神不宁"},
+ {id:79, text:"感到自己没有什么价值"},
+ {id:80, text:"感到熟悉的东西变得陌生"},
+ {id:81, text:"大叫或摔东西"},
+ {id:82, text:"害怕会在公共场合昏倒"},
+ {id:83, text:"感到别人想占你的便宜"},
+ {id:84, text:"为一些事情反复想个不停"},
+ {id:85, text:"认为应该因为自己的过错而受到惩罚"},
+ {id:86, text:"感到要很快把事情做完"},
+ {id:87, text:"感到自己的身体有严重问题"},
+ {id:88, text:"从未感到和别人很亲近"},
+ {id:89, text:"感到有罪"},
+ {id:90, text:"感到自己的脑子有毛病"}
 ];
+</script>
 
 const scale = ["没有","很轻","中等","偏重","严重"];
 
 /* ========= 开始测试 ========= */
-function startTest(){
-  document.getElementById("intro").style.display="none";
-  const form = document.getElementById("testForm");
-  form.style.display="block";
+<script>
+function renderQuestions() {
+  const container = document.getElementById('questions')
+  container.innerHTML = ''
 
-  questions.forEach((q,i)=>{
-    const div = document.createElement("div");
-    div.className="question";
-    div.innerHTML =
-      `<p>${i+1}. ${q.text}</p>` +
-      scale.map((s,v)=>
-        `<label><input type="radio" name="q${i}" value="${v}" required> ${v} ${s}</label>`
-      ).join("");
-    form.appendChild(div);
-  });
+  const start = currentPage * pageSize
+  const end = Math.min(start + pageSize, questions.length)
+  const totalPages = Math.ceil(questions.length / pageSize)
 
-  const btn = document.createElement("button");
-  btn.type="submit";
-  btn.textContent="提交并查看结果";
-  form.appendChild(btn);
+  // 进度提示
+  const progress = document.createElement('div')
+  progress.className = 'progress'
+  progress.innerText = `第 ${currentPage + 1} / ${totalPages} 页`
+  container.appendChild(progress)
 
-  form.onsubmit = submitTest;
+  for (let i = start; i < end; i++) {
+    const q = questions[i]
+    const div = document.createElement('div')
+    div.className = 'question'
+    div.innerHTML = `
+      <p>${q.id}. ${q.text}</p>
+      ${[0,1,2,3,4].map(v => `
+        <label>
+          <input type="radio" name="q${q.id}" value="${v}"
+            ${answers[q.id] == v ? 'checked' : ''}>
+          ${v}
+        </label>
+      `).join('')}
+    `
+    container.appendChild(div)
+  }
+
+  // 按钮区
+  const nav = document.createElement('div')
+  nav.className = 'nav-buttons'
+
+  if (currentPage > 0) {
+    const prev = document.createElement('button')
+    prev.innerText = '上一页'
+    prev.onclick = () => {
+      saveAnswers()
+      currentPage--
+      renderQuestions()
+    }
+    nav.appendChild(prev)
+  }
+
+  if (end < questions.length) {
+    const next = document.createElement('button')
+    next.innerText = '下一页'
+    next.onclick = () => {
+      saveAnswers()
+      currentPage++
+      renderQuestions()
+    }
+    nav.appendChild(next)
+  } else {
+    const submit = document.createElement('button')
+    submit.innerText = '提交并查看结果'
+    submit.onclick = submitTest
+    nav.appendChild(submit)
+  }
+
+  container.appendChild(nav)
 }
+</script>
 
 /* ========= 计算结果 ========= */
+  <script>
+function saveAnswers() {
+  questions.forEach(q => {
+    const checked = document.querySelector(
+      `input[name="q${q.id}"]:checked`
+    )
+    if (checked) {
+      answers[q.id] = parseInt(checked.value)
+    }
+  })
+}
+  </script>
 function submitTest(e){
   e.preventDefault();
   let total = 0;
@@ -169,4 +309,5 @@ function submitTest(e){
 
 </body>
 </html>
+
 
