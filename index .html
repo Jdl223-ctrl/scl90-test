@@ -1,0 +1,266 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCL-90 心理测试</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+.card { background: #fff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+.question { margin-bottom: 15px; }
+.nav-buttons { margin-top: 15px; }
+.nav-buttons button { margin-right: 10px; padding: 8px 12px; border-radius: 5px; border: none; background: #4caf50; color: #fff; cursor: pointer; }
+.nav-buttons button:hover { background: #45a049; }
+.progress { margin-bottom: 10px; font-weight: bold; }
+.tip { font-size: 0.9em; color: #888; margin-top: 10px; }
+#posterCanvas { display: none; border:1px solid #ccc; margin-top:15px; }
+</style>
+</head>
+<body>
+
+<div class="card" id="intro">
+  <p>
+    如果你最近总是：
+    <br>• 情绪低落，却说不出原因
+    <br>• 明明没事，却很累
+    <br>• 晚上睡不着，白天硬撑
+  </p>
+  <p>
+    这个测试，或许能帮你看清
+    <strong>你正在承受什么</strong>
+  </p>
+  <p class="tip">匿名 · 今日有效 · 结果只给你一个人看</p>
+  <button onclick="startTest()">开始测试</button>
+</div>
+
+<div class="card" id="questions" style="display:none;"></div>
+
+<div class="card" id="result" style="display:none;">
+  <canvas id="radarChart" width="400" height="400"></canvas>
+  <div id="reportText" style="margin-top:15px;"></div>
+  <button onclick="generatePoster()">生成心理状态海报</button>
+  <canvas id="posterCanvas" width="600" height="800"></canvas>
+</div>
+
+<script>
+// ================= SCL-90 完整 90 题数组 =================
+const questions = [
+ {id:1, text:"头痛", factor:"躯体化"},{id:2, text:"神经过敏，心中不踏实", factor:"焦虑"},{id:3, text:"头脑中有不必要的想法或字句盘旋", factor:"强迫症状"},
+ {id:4, text:"头昏或昏倒", factor:"躯体化"},{id:5, text:"对异性的兴趣减退", factor:"抑郁"},{id:6, text:"对旁人责备你或议论你感到不安", factor:"人际敏感"},
+ {id:7, text:"感到别人能控制你的思想", factor:"精神病性"},{id:8, text:"责怪别人制造麻烦", factor:"偏执"},{id:9, text:"忘性大", factor:"强迫症状"},
+ {id:10, text:"担心衣服不整齐、仪态不好", factor:"强迫症状"},{id:11, text:"容易烦恼和激动", factor:"敌对"},{id:12, text:"胸口或心口疼痛", factor:"躯体化"},
+ {id:13, text:"害怕空旷的场所或街道", factor:"恐怖"},{id:14, text:"感到自己的精力下降，活动减慢", factor:"抑郁"},{id:15, text:"想结束自己的生命", factor:"抑郁"},
+ {id:16, text:"听到旁人听不到的声音", factor:"精神病性"},{id:17, text:"发抖", factor:"焦虑"},{id:18, text:"感到大多数人都不可信任", factor:"偏执"},
+ {id:19, text:"胃口不好", factor:"其他"},{id:20, text:"容易哭泣", factor:"抑郁"},{id:21, text:"同异性相处时感到害羞不自在", factor:"人际敏感"},
+ {id:22, text:"感到受骗、被利用或被欺负", factor:"抑郁"},{id:23, text:"无缘无故地突然感到害怕", factor:"焦虑"},{id:24, text:"自己不能控制地大发脾气", factor:"敌对"},
+ {id:25, text:"怕单独出门", factor:"恐怖"},{id:26, text:"经常责怪自己", factor:"抑郁"},{id:27, text:"腰痛", factor:"躯体化"},
+ {id:28, text:"感到难以完成事情", factor:"强迫症状"},{id:29, text:"感到孤独", factor:"抑郁"},{id:30, text:"感到苦闷", factor:"抑郁"},
+ {id:31, text:"过分担忧", factor:"抑郁"},{id:32, text:"对事物不感兴趣", factor:"抑郁"},{id:33, text:"感到害怕", factor:"焦虑"},
+ {id:34, text:"你的感情容易受到伤害", factor:"人际敏感"},{id:35, text:"旁人能知道你的私下想法", factor:"精神病性"},{id:36, text:"感到别人不理解你、不同情你", factor:"人际敏感"},
+ {id:37, text:"感到人们对你不友好、不喜欢你", factor:"人际敏感"},{id:38, text:"做事必须做得很慢以保证做得正确", factor:"强迫症状"},{id:39, text:"心跳得很厉害", factor:"焦虑"},
+ {id:40, text:"恶心或胃部不舒服", factor:"躯体化"},{id:41, text:"感到比不上别人", factor:"人际敏感"},{id:42, text:"肌肉酸痛", factor:"躯体化"},
+ {id:43, text:"感到有人在监视你、谈论你", factor:"偏执"},{id:44, text:"难以入睡", factor:"其他"},{id:45, text:"做事必须反复检查", factor:"强迫症状"},
+ {id:46, text:"难以做出决定", factor:"强迫症状"},{id:47, text:"怕乘坐公共汽车、地铁或火车", factor:"恐怖"},{id:48, text:"呼吸有困难", factor:"躯体化"},
+ {id:49, text:"一阵阵发冷或发热", factor:"躯体化"},{id:50, text:"因为害怕而回避某些东西、场合或活动", factor:"恐怖"},
+ {id:51, text:"脑子变空了", factor:"强迫症状"},{id:52, text:"身体发麻或刺痛", factor:"躯体化"},{id:53, text:"喉咙有梗塞感", factor:"躯体化"},
+ {id:54, text:"对未来感到没有希望", factor:"抑郁"},{id:55, text:"难以集中注意力", factor:"强迫症状"},{id:56, text:"感到身体的某一部分软弱无力", factor:"躯体化"},
+ {id:57, text:"感到紧张或容易紧张", factor:"焦虑"},{id:58, text:"感到手或脚沉重", factor:"躯体化"},{id:59, text:"想到死亡的事情", factor:"其他"},
+ {id:60, text:"吃得太多", factor:"其他"},{id:61, text:"当别人看着你或谈论你时感到不自在", factor:"人际敏感"},
+ {id:62, text:"有一些不属于你自己的想法", factor:"精神病性"},{id:63, text:"有想打人或伤害他人的冲动", factor:"敌对"},
+ {id:64, text:"醒得太早", factor:"其他"},{id:65, text:"必须反复洗手或反复清洁", factor:"强迫症状"},{id:66, text:"睡得不稳不深", factor:"其他"},
+ {id:67, text:"有想摔坏或破坏东西的冲动", factor:"敌对"},{id:68, text:"有一些别人没有的想法或念头", factor:"偏执"},{id:69, text:"感到对别人神经过敏", factor:"人际敏感"},
+ {id:70, text:"在商店或电影院等人多的地方感到不自在", factor:"恐怖"},{id:71, text:"感到做任何事情都很困难", factor:"抑郁"},{id:72, text:"一阵阵恐惧或惊恐", factor:"焦虑"},
+ {id:73, text:"感到在公共场合吃东西很不舒服", factor:"人际敏感"},{id:74, text:"经常与人争论", factor:"敌对"},{id:75, text:"单独一人时感到害怕", factor:"恐怖"},
+ {id:76, text:"感到别人不重视你的成就", factor:"偏执"},{id:77, text:"感到孤单，即使和别人在一起", factor:"精神病性"},{id:78, text:"感到坐立不安、心神不宁", factor:"焦虑"},
+ {id:79, text:"感到自己没有什么价值", factor:"抑郁"},{id:80, text:"感到熟悉的东西变得陌生", factor:"焦虑"},{id:81, text:"大叫或摔东西", factor:"敌对"},
+ {id:82, text:"害怕会在公共场合昏倒", factor:"恐怖"},{id:83, text:"感到别人想占你的便宜", factor:"偏执"},{id:84, text:"为一些事情反复想个不停", factor:"强迫症状"},
+ {id:85, text:"认为应该因为自己的过错而受到惩罚", factor:"精神病性"},{id:86, text:"感到要很快把事情做完", factor:"焦虑"},{id:87, text:"感到自己的身体有严重问题", factor:"躯体化"},
+ {id:88, text:"从未感到和别人很亲近", factor:"精神病性"},{id:89, text:"感到有罪", factor:"其他"},{id:90, text:"感到自己的脑子有毛病", factor:"精神病性"}
+];
+
+// =============== 分页控制变量 ===============
+const pageSize = 5
+let currentPage = 0
+let answers = {}
+// ============================================
+
+// 自动生成今日 token
+function getTodayToken() {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+const token = getTodayToken()
+
+// 开始测试
+function startTest() {
+  document.getElementById('intro').style.display = 'none'
+  document.getElementById('questions').style.display = 'block'
+  renderQuestions()
+}
+
+// 保存答案
+function saveAnswers() {
+  questions.forEach(q => {
+    const checked = document.querySelector(`input[name="q${q.id}"]:checked`)
+    if (checked) answers[q.id] = parseInt(checked.value)
+  })
+}
+
+// 渲染分页题目
+function renderQuestions() {
+  const container = document.getElementById('questions')
+  container.innerHTML = ''
+  const start = currentPage * pageSize
+  const end = Math.min(start + pageSize, questions.length)
+  const totalPages = Math.ceil(questions.length / pageSize)
+
+  const progress = document.createElement('div')
+  progress.className = 'progress'
+  progress.innerText = `第 ${currentPage + 1} / ${totalPages} 页`
+  container.appendChild(progress)
+
+  for (let i = start; i < end; i++) {
+    const q = questions[i]
+    const div = document.createElement('div')
+    div.className = 'question'
+    div.innerHTML = `
+      <p>${q.id}. ${q.text}</p>
+      ${[0,1,2,3,4].map(v => `
+        <label>
+          <input type="radio" name="q${q.id}" value="${v}"
+            ${answers[q.id] == v ? 'checked' : ''}>
+          ${v}
+        </label>
+      `).join('')}
+    `
+    container.appendChild(div)
+  }
+
+  const nav = document.createElement('div')
+  nav.className = 'nav-buttons'
+
+  if (currentPage > 0) {
+    const prev = document.createElement('button')
+    prev.innerText = '上一页'
+    prev.onclick = () => { saveAnswers(); currentPage--; renderQuestions() }
+    nav.appendChild(prev)
+  }
+
+  if (end < questions.length) {
+    const next = document.createElement('button')
+    next.innerText = '下一页'
+    next.onclick = () => { saveAnswers(); currentPage++; renderQuestions() }
+    nav.appendChild(next)
+  } else {
+    const submit = document.createElement('button')
+    submit.innerText = '提交并查看结果'
+    submit.onclick = submitTest
+    nav.appendChild(submit)
+  }
+
+  container.appendChild(nav)
+}
+
+// 提交测试并显示雷达图 + 治愈报告
+let factorData = {}
+function submitTest() {
+  saveAnswers()
+  document.getElementById('questions').style.display = 'none'
+  const resultDiv = document.getElementById('result')
+  resultDiv.style.display = 'block'
+
+  // 计算 10 因子均分
+  const factors = {
+    "躯体化":0, "强迫症状":0, "人际敏感":0, "抑郁":0, "焦虑":0,
+    "敌对":0, "恐怖":0, "偏执":0, "精神病性":0, "其他":0
+  }
+  const count = {}
+  Object.keys(factors).forEach(k=>count[k]=0)
+
+  questions.forEach(q=>{
+    if(answers[q.id]!=undefined){
+      factors[q.factor] += answers[q.id]
+      count[q.factor]++
+    }
+  })
+
+  const labels = Object.keys(factors)
+  const data = labels.map(l => (count[l]>0 ? (factors[l]/count[l]).toFixed(2) : 0))
+  factorData = {labels, data} // 保存给海报用
+
+  // 生成雷达图
+  const ctx = document.getElementById('radarChart').getContext('2d')
+  new Chart(ctx, {
+    type: 'radar',
+    data: { labels, datasets:[{label:'心理因子均分', data:data, backgroundColor:'rgba(76,175,80,0.2)', borderColor:'rgba(76,175,80,1)', borderWidth:2}]},
+    options:{scales:{r:{beginAtZero:true,max:4}}, responsive:true}
+  })
+
+  // 治愈型文字报告
+  const depressAvg = data[labels.indexOf("抑郁")]
+  let text = ''
+  if(depressAvg<1) text="你最近情绪稳定，继续保持。"
+  else if(depressAvg<2) text="你可能有轻度情绪波动，建议放松自己。"
+  else if(depressAvg<3) text="情绪偏低，请多关注自己，适当倾诉。"
+  else text="情绪较严重，建议寻求专业心理咨询。"
+  document.getElementById('reportText').innerHTML = `<p>${text}</p>`
+}
+
+// 生成 Canvas 海报
+function generatePoster() {
+  const canvas = document.getElementById('posterCanvas')
+  canvas.style.display='block'
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle='#fff'
+  ctx.fillRect(0,0,canvas.width,canvas.height)
+
+  // 标题
+  ctx.fillStyle='#4caf50'
+  ctx.font='22px Arial'
+  ctx.fillText('今日心理状态', 180, 40)
+
+  // 日期
+  ctx.fillStyle='#333'
+  ctx.font='16px Arial'
+  const today = new Date()
+  ctx.fillText(`日期: ${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, 200, 70)
+
+  // 报告文字
+  ctx.fillStyle='#000'
+  ctx.font='16px Arial'
+  ctx.fillText(document.getElementById('reportText').innerText, 50, 100)
+
+  // 简单雷达图绘制
+  const radarX = 300, radarY = 400, radius = 120
+  const {labels,data} = factorData
+  const angleStep = 2*Math.PI/labels.length
+  ctx.strokeStyle='rgba(76,175,80,1)'
+  ctx.fillStyle='rgba(76,175,80,0.2)'
+  ctx.beginPath()
+  labels.forEach((l,i)=>{
+    const r = data[i]/4*radius
+    const x = radarX + r*Math.sin(i*angleStep)
+    const y = radarY - r*Math.cos(i*angleStep)
+    if(i==0) ctx.moveTo(x,y)
+    else ctx.lineTo(x,y)
+  })
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+  // 绘制标签
+  ctx.fillStyle='#000'
+  ctx.font='12px Arial'
+  labels.forEach((l,i)=>{
+    const x = radarX + (radius+20)*Math.sin(i*angleStep)
+    const y = radarY - (radius+20)*Math.cos(i*angleStep)
+    ctx.fillText(l, x-15, y)
+  })
+}
+</script>
+
+</body>
+</html>
