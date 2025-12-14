@@ -254,7 +254,7 @@ function renderQuestions() {
 </script>
 
 /* ========= 计算结果 ========= */
-  <script>
+<script>
 function saveAnswers() {
   questions.forEach(q => {
     const checked = document.querySelector(
@@ -265,33 +265,7 @@ function saveAnswers() {
     }
   })
 }
-  </script>
-function submitTest(e){
-  e.preventDefault();
-  let total = 0;
-  let factorMap = {};
-
-  questions.forEach((q,i)=>{
-    const v = Number(document.querySelector(`input[name=q${i}]:checked`).value);
-    total += v;
-    if(!factorMap[q.factor]) factorMap[q.factor]=[];
-    factorMap[q.factor].push(v);
-  });
-
-  let report = "";
-  Object.keys(factorMap).forEach(f=>{
-    const avg = (factorMap[f].reduce((a,b)=>a+b,0)/factorMap[f].length).toFixed(2);
-    report += `<p>${f}：${avg}</p>`;
-  });
-
-  let level = "心理状态基本正常";
-  let heal = "你已经做得很好了，允许自己慢一点。";
-
-  const avgTotal = total / questions.length;
-  if(avgTotal>=2){
-    level="情绪压力偏高";
-    heal="你不是脆弱，只是承受得太久了。";
-  }
+</script>
 
   document.getElementById("testForm").style.display="none";
   const r = document.getElementById("result");
@@ -309,5 +283,6 @@ function submitTest(e){
 
 </body>
 </html>
+
 
 
