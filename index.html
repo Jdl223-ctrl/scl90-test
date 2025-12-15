@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>今天的你，还好吗？</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei';background:linear-gradient(180deg,#f7eefe,#fdfcff);color:#444}
+    .wrap{max-width:720px;margin:auto;padding:20px}
+    .card{background:#fff;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
+    h1,h2{margin:0 0 12px}
+    p{line-height:1.9;color:#666}
+    button{border:none;border-radius:999px;padding:12px 20px;font-size:16px;background:#b98bfd;color:#fff}
+    button.secondary{background:#eee;color:#555}
+    .progress{height:8px;background:#eee;border-radius:8px;overflow:hidden;margin:16px 0}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,#b98bfd,#9fd3ff)}
+    .q{margin:18px 0}
+    .opts label{display:block;margin:6px 0}
+    .hidden{display:none}
+    #result{margin-top:20px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- 入口页 -->
+<div class="card" id="intro">
+  <h1>也许你只是有点累了 🌙</h1>
+  <p>这不是诊断，也不是标签，而是一次温柔的自我觉察。</p>
+  <p>测试约 6–8 分钟，匿名，仅当日有效。</p>
+  <button onclick="startTest()">开始温柔测试</button>
+</div>
+
+<!-- 测试页 -->
+<div class="card hidden" id="test">
+  <h2>请根据最近一周的真实感受作答</h2>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div id="questions"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:16px">
+    <button class="secondary" onclick="prevPage()">上一页</button>
+    <button onclick="nextPage()">下一页</button>
+  </div>
+</div>
+
+<!-- 结果页 -->
+<div class="card hidden" id="result">
+  <h2>你的心理状态报告</h2>
+  <p id="reportId"></p>
+  <canvas id="radar"></canvas>
+  <div id="summary"></div>
+  <div id="lock" style="margin-top:16px;padding:16px;border-radius:16px;background:#f7f3ff">
+    <p><b>完整版报告已锁定</b></p>
+    <p>关注后可解锁更详细的陪伴建议。</p>
+  </div>
+  <button style="margin-top:16px" onclick="saveImage()">生成长图分享</button>
+</div>
+
+</div>
+
+<script>
+/******** Token（当日有效） ********/
+const today = new Date().toISOString().slice(0,10);
+const token = btoa('SCL90-'+today);
+if(localStorage.getItem('done')===token){alert('你今天已经完成过测试');}
+
+/******** 题目 ********/
+const QUESTIONS = ["1. 头痛","2. 神经过敏，心中不踏实","3. 头脑中有不必要的想法或字句","4. 头晕或昏倒","5. 对异性的兴趣减退","6. 对旁人责备求全","7. 感到别人能控制你的思想","8. 责怪别人制造麻烦","9. 忘性大","10. 担心自己的衣饰整齐","11. 容易烦恼和激动","12. 胸口疼痛","13. 害怕空旷的场所或街道","14. 感到自己的精力下降，活动减慢","15. 想结束自己的生命","16. 听到旁人听不到的声音","17. 发抖","18. 感到大多数人都不可信任","19. 胃口不好","20. 容易哭泣","21. 同异性相处时感到害羞不自在","22. 感到受骗、被利用或被人捉弄","23. 无缘无故地突然感到害怕","24. 自己不能控制地发脾气","25. 怕单独出门","26. 经常责怪自己","27. 腰痛","28. 感到难以完成事情","29. 感到孤独","30. 感到苦闷","31. 过分担忧","32. 对事物不感兴趣","33. 感到害怕","34. 你的感情容易受到伤害","35. 旁人能知道你的私下想法","36. 感到别人不理解你、不同情你","37. 感到人们对你不友好，不喜欢你","38. 做事必须做得很慢以保证做得正确","39. 心跳得很厉害","40. 恶心或胃部不舒服","41. 感到比不上别人","42. 肌肉酸痛","43. 感到有人在监视你、谈论你","44. 难以入睡","45. 做事必须反复检查","46. 难以做出决定","47. 怕乘坐公共汽车、地铁或火车","48. 呼吸有困难","49. 一阵阵发冷或发热","50. 因为恐惧而避开某些东西、场合或活动","51. 脑子变空了","52. 身体发麻或刺痛","53. 喉咙有梗塞感","54. 感到前途没有希望","55. 不能集中注意力","56. 感到身体的某一部分软弱无力","57. 感到紧张或容易紧张","58. 感到手或脚发沉","59. 想到死亡的事","60. 吃得太多","61. 当别人看着你或谈论你时感到不自在","62. 头脑中有一些不是你自己的想法","63. 有想打人或伤害他人的冲动","64. 醒得太早","65. 必须反复洗手、点数","66. 睡得不稳不深","67. 有想摔坏或破坏东西的冲动","68. 有一些别人没有的想法或信念","69. 感到对别人神经过敏","70. 在商店或电影院等人多的地方感到不自在","71. 感到做任何事情都很困难","72. 一阵阵恐惧或惊恐","73. 感到在公共场合吃东西很不舒服","74. 经常与人争论","75. 单独一个人时感到害怕","76. 感到别人不尊重你","77. 感到即使和别人在一起也很孤单","78. 感到坐立不安，难以安静","79. 感到自己没有什么价值","80. 感到熟悉的东西变得陌生或不真实","81. 大叫或摔东西","82. 害怕会在公共场合昏倒","83. 感到别人想占你的便宜","84. 为一些无关紧要的事情而过分担心","85. 感到对任何事情都提不起兴趣","86. 感到必须不断努力才能完成事情","87. 感到未来没有希望","88. 感到自己情感麻木","89. 感到生活没有意义","90. 感到无法摆脱一些反复出现的想法"];
+
+const PER=5;let page=0;const ans={};
+
+function startTest(){document.getElementById('intro').classList.add('hidden');document.getElementById('test').classList.remove('hidden');render();}
+
+function render(){
+  const box=document.getElementById('questions');box.innerHTML='';
+  const start=page*PER;
+  QUESTIONS.slice(start,start+PER).forEach((q,i)=>{
+    const idx=start+i;
+    const d=document.createElement('div');d.className='q';
+    d.innerHTML=`<div>${q}</div><div class='opts'>${[1,2,3,4,5].map(v=>`<label><input type='radio' name='q${idx}' value='${v}' ${ans[idx]==v?'checked':''} onchange='ans[${idx}]=${v}'> ${v}分</label>`).join('')}</div>`;
+    box.appendChild(d);
+  });
+  document.getElementById('bar').style.width=((page+1)/18*100)+'%';
+}
+
+function nextPage(){if(page<17){page++;render();}else submit();}
+function prevPage(){if(page>0){page--;render();}}
+
+function submit(){
+  localStorage.setItem('done',token);
+  document.getElementById('test').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  const total=Object.values(ans).reduce((a,b)=>a+Number(b||0),0)/90;
+  let level='情绪较为平稳';
+  if(total>1.5) level='轻度情绪困扰';
+  if(total>2.5) level='情绪压力偏高';
+  if(total>3.5) level='情绪负荷较重';
+  const id='R'+Date.now();
+  document.getElementById('reportId').innerText='报告编号：'+id;
+  document.getElementById('summary').innerHTML=`<p><b>${level}</b></p><p>这不是定义，而是一种提醒。你已经很努力了。</p>`;
+  new Chart(document.getElementById('radar'),{type:'radar',data:{labels:['情绪','睡眠','压力','专注','动力'],datasets:[{data:[total,5-total,total,5-total,total]}]}});
+}
+
+function saveImage(){html2canvas(document.getElementById('result')).then(c=>{const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='心理报告.png';a.click();});}
+</script>
+</body>
+</html>
